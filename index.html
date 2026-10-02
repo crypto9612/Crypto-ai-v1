@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>Crypto AI・SNR 交易判讀</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#131e30;--line:#26364d;--muted:#9aabc2;--text:#eef4ff;--green:#31d49a;--red:#ff687d;--yellow:#f4c76b;--blue:#79aaff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101d31,#080e19 55%);font:15px system-ui,-apple-system,"Noto Sans TC",sans-serif;color:var(--text);padding:16px 14px 36px}
+main{max-width:760px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 16px}.brand{font-weight:800;font-size:19px}.sub{font-size:12px;color:var(--muted);margin-top:3px}
+.pill{border:1px solid var(--line);padding:6px 10px;border-radius:99px;color:var(--muted);font-size:11px}
+.panel{background:rgba(19,30,48,.96);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 8px 28px #0002}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+input,select,button{width:100%;border-radius:10px;border:1px solid var(--line);background:#0c1626;color:var(--text);padding:12px;font:inherit;min-width:0}
+button{background:#244a82;border:0;font-weight:700;cursor:pointer}.actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:12px}.actions button:last-child{background:#26364d}
+.priceRow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}.price{font-size:clamp(26px,7vw,38px);font-weight:800;letter-spacing:-1px}.muted{color:var(--muted)}.small{font-size:12px;color:var(--muted)}
+.signal{display:flex;justify-content:space-between;align-items:center;gap:10px}.signalName{font-size:26px;font-weight:900}.long{color:var(--green)}.short{color:var(--red)}.wait{color:var(--yellow)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.metric{background:#0c1626;border:1px solid #223148;border-radius:12px;padding:11px}.metric .v{font-size:17px;font-weight:750;margin-top:5px;overflow-wrap:anywhere}.metric .k{font-size:11px;color:var(--muted)}
+.bar{height:8px;border-radius:10px;background:#26364d;overflow:hidden;margin:9px 0}.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green));width:50%}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.level{background:#0c1626;border-radius:10px;padding:10px}.level b{display:block;font-size:15px;margin-top:5px;overflow-wrap:anywhere}
+.note{font-size:12px;color:var(--muted);line-height:1.55}.status{font-size:12px;color:var(--muted);margin-top:10px;min-height:18px}
+ul{padding-left:18px;margin:8px 0}li{margin:5px 0;color:#cbd7e8;font-size:13px}
+footer{font-size:11px;color:#8495ac;line-height:1.6;padding:8px 2px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}.controls{grid-template-columns:repeat(4,1fr)}}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crypto AI SNR">
+<link rel="apple-touch-icon" href="icon-192.png">
+\n</head>
+<body><main>
+<div class="top"><div><div class="brand">◈ Crypto AI・SNR</div><div class="sub">合約行情判讀｜技術評分｜風險試算</div></div><span class="pill">訊號版 v1.0</span></div>
+<section class="panel">
+<div class="controls">
+ <div class="field"><label>交易對（USDT 永續）</label><input id="symbol" value="DOGEUSDT" autocapitalize="characters"></div>
+ <div class="field"><label>時間週期</label><select id="interval"><option>5m</option><option selected>15m</option><option>1h</option><option>4h</option><option>1d</option></select></div>
+ <div class="field"><label>保證金（USDT）</label><input id="margin" type="number" min="1" step="1" value="10"></div>
+ <div class="field"><label>槓桿（倍）</label><input id="leverage" type="number" min="1" max="125" value="10"></div>
+</div><div class="actions"><button id="run">立即分析</button><button id="auto">自動更新：關</button></div>
+<div class="status" id="status">準備連線 Binance USDⓈ-M 公開行情…</div>
+</section>
+<section class="panel">
+<div class="priceRow"><div><div class="small" id="pairLabel">DOGEUSDT 永續合約</div><div class="price" id="price">—</div></div><div class="small" id="updated">尚未更新</div></div>
+<div style="height:1px;background:var(--line);margin:14px 0"></div>
+<div class="signal"><div><div class="small">AI＋SNR 綜合訊號</div><div id="signal" class="signalName wait">等待分析</div></div><div style="text-align:right"><div class="small">方向分數</div><b id="score" style="font-size:22px">—</b><div class="small">滿分 ±6</div></div></div>
+<div class="bar"><i id="scorebar"></i></div><div id="reason" class="note">分析將結合 EMA 趨勢、RSI、MACD 與 SNR 支撐壓力位置。</div>
+</section>
+<section class="panel"><div style="font-weight:750;margin-bottom:11px">技術指標</div><div class="grid">
+<div class="metric"><div class="k">RSI（14）</div><div class="v" id="rsi">—</div></div>
+<div class="metric"><div class="k">EMA 9 / 21</div><div class="v" id="ema">—</div></div>
+<div class="metric"><div class="k">MACD 柱體</div><div class="v" id="macd">—</div></div>
+<div class="metric"><div class="k">ATR（14）</div><div class="v" id="atr">—</div></div>
+</div></section>
+<section class="panel"><div style="font-weight:750;margin-bottom:11px">SNR 支撐／壓力區</div><div class="levels">
+<div class="level"><span class="small">壓力 R</span><b id="res" class="short">—</b></div>
+<div class="level"><span class="small">現價</span><b id="mid">—</b></div>
+<div class="level"><span class="small">支撐 S</span><b id="sup" class="long">—</b></div>
+</div><p class="note" id="snrnote">以近期擺動高低點聚類估算區域；不是保證有效的價位。</p></section>
+<section class="panel"><div style="font-weight:750;margin-bottom:11px">交易計畫（估算）</div><div class="grid">
+<div class="metric"><div class="k">建議進場參考</div><div class="v" id="entry">—</div></div>
+<div class="metric"><div class="k">止損價</div><div class="v short" id="stop">—</div></div>
+<div class="metric"><div class="k">止盈 TP1（1.5R）</div><div class="v long" id="tp1">—</div></div>
+<div class="metric"><div class="k">止盈 TP2（2.5R）</div><div class="v long" id="tp2">—</div></div>
+</div><div class="grid" style="margin-top:9px">
+<div class="metric"><div class="k">預估下單數量</div><div class="v" id="qty">—</div></div>
+<div class="metric"><div class="k">止損損失（約）</div><div class="v short" id="loss">—</div></div>
+<div class="metric"><div class="k">TP1 收益（約）</div><div class="v long" id="gain1">—</div></div>
+<div class="metric"><div class="k">風險報酬比</div><div class="v" id="rr">—</div></div>
+</div><p class="note">以保證金 × 槓桿估算名目倉位；損益未計手續費、資金費率、滑價及強平影響。觀望訊號不代表應該進場。</p></section>
+<section class="panel"><div style="font-weight:750">判讀依據</div><ul id="checks"><li>等待行情資料…</li></ul></section>
+<footer>此工具是規則式技術評分原型，不是經訓練的預測模型，也不保證漲跌或獲利。只讀取公開行情，不會下單、不需要 API Key。請先模擬交易並自行確認交易所合約規格。</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let timer=null,last=null;
+const fmt=(x)=>Number.isFinite(x)?x.toLocaleString('en-US',{maximumFractionDigits:x<1?7:3}):'—';
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+function ema(a,p){let k=2/(p+1),v=a[0];const out=[v];for(let i=1;i<a.length;i++){v=a[i]*k+v*(1-k);out.push(v)}return out}
+function rsi(a,p=14){let g=0,l=0;for(let i=1;i<=p;i++){let d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}g/=p;l/=p;for(let i=p+1;i<a.length;i++){let d=a[i]-a[i-1];g=(g*(p-1)+Math.max(d,0))/p;l=(l*(p-1)+Math.max(-d,0))/p}return l===0?100:100-100/(1+g/l)}
+function atr(c,p=14){let t=[];for(let i=1;i<c.length;i++)t.push(Math.max(c[i].h-c[i].l,Math.abs(c[i].h-c[i-1].c),Math.abs(c[i].l-c[i-1].c)));return mean(t.slice(-p))}
+function pivots(c){let highs=[],lows=[];for(let i=2;i<c.length-2;i++){if(c[i].h>c[i-1].h&&c[i].h>c[i-2].h&&c[i].h>c[i+1].h&&c[i].h>c[i+2].h)highs.push(c[i].h);if(c[i].l<c[i-1].l&&c[i].l<c[i-2].l&&c[i].l<c[i+1].l&&c[i].l<c[i+2].l)lows.push(c[i].l)}return {highs,lows}}
+function nearestCluster(vals,price,above){let xs=vals.filter(x=>above?x>price:x<price).sort((a,b)=>Math.abs(a-price)-Math.abs(b-price));if(!xs.length)return null;let near=xs[0],band=vals.filter(x=>Math.abs(x-near)<=Math.abs(price)*.0025);return mean(band)}
+function analyze(raw){
+ const c=raw.slice(0,-1).map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
+ if(c.length<60)throw Error('K線數量不足');
+ const closes=c.map(x=>x.c),e9=ema(closes,9),e21=ema(closes,21),e50=ema(closes,50);
+ const r=rsi(closes),a=atr(c),m=ema(closes,12).map((x,i)=>x-ema(closes,26)[i]),sig=ema(m,9),hist=m.at(-1)-sig.at(-1);
+ const {highs,lows}=pivots(c.slice(-100));const price=closes.at(-1);
+ const sup=nearestCluster(lows,price,false),res=nearestCluster(highs,price,true);
+ let score=0,why=[];
+ if(e9.at(-1)>e21.at(-1)){score++;why.push('EMA9 高於 EMA21：短線偏多')}else{score--;why.push('EMA9 低於 EMA21：短線偏空')}
+ if(price>e50.at(-1)){score++;why.push('價格在 EMA50 上方')}else{score--;why.push('價格在 EMA50 下方')}
+ if(hist>0){score++;why.push('MACD 柱體為正')}else{score--;why.push('MACD 柱體為負')}
+ if(r>=52&&r<70){score++;why.push('RSI 動能偏多且未進入明顯超買區')}else if(r<=48&&r>30){score--;why.push('RSI 動能偏空且未進入明顯超賣區')}else{why.push('RSI 未提供明確方向加分')}
+ if(sup&&((price-sup)/price)<.012){score++;why.push('價格接近 SNR 支撐區')} 
+ if(res&&((res-price)/price)<.012){score--;why.push('價格接近 SNR 壓力區')}
+ const direction=score>=3?'LONG':score<=-3?'SHORT':'WAIT';
+ return {c,price,e9:e9.at(-1),e21:e21.at(-1),r,a,hist,sup,res,score,direction,why};
+}
+function show(d){
+ const sym=$('symbol').value.trim().toUpperCase(),margin=+$('margin').value,lev=+$('leverage').value;
+ $('pairLabel').textContent=sym+' 永續合約・'+$('interval').value;
+ $('price').textContent=fmt(d.price);$('updated').textContent='更新 '+new Date().toLocaleTimeString('zh-TW');
+ $('signal').textContent=d.direction==='LONG'?'偏多 LONG':d.direction==='SHORT'?'偏空 SHORT':'觀望 WAIT';
+ $('signal').className='signalName '+(d.direction==='LONG'?'long':d.direction==='SHORT'?'short':'wait');
+ $('score').textContent=(d.score>0?'+':'')+d.score;$('scorebar').style.width=((d.score+6)/12*100)+'%';
+ $('reason').textContent=d.direction==='WAIT'?'多空條件未達門檻，先等待更明確的趨勢或支撐壓力反應。':'目前訊號僅代表技術條件偏向'+(d.direction==='LONG'?'做多':'做空')+'，請等收線確認並檢查風險。';
+ $('rsi').textContent=d.r.toFixed(1);$('ema').textContent=fmt(d.e9)+' / '+fmt(d.e21);$('macd').textContent=fmt(d.hist);$('atr').textContent=fmt(d.a);
+ $('res').textContent=fmt(d.res);$('mid').textContent=fmt(d.price);$('sup').textContent=fmt(d.sup);
+ $('snrnote').textContent='近 100 根已收線 K 棒的擺動高低點聚類估算；支撐/壓力可能失效。';
+ $('checks').innerHTML=d.why.map(x=>'<li>'+x+'</li>').join('');
+ let entry=d.price,stop,tp1,tp2,qty,loss,gain1,rr;
+ if(d.direction==='WAIT'||!Number.isFinite(margin)||margin<=0||!Number.isFinite(lev)||lev<=0){
+  [stop,tp1,tp2,qty,loss,gain1,rr].forEach((_,i)=>{});['entry','stop','tp1','tp2','qty','loss','gain1','rr'].forEach(id=>$(id).textContent='—');return;
+ }
+ const risk=Math.max(d.a*1.5,entry*.002);
+ if(d.direction==='LONG'){stop=Math.min(entry-risk,d.sup&&d.sup<entry?d.sup-d.a*.15:entry-risk);let r=entry-stop;tp1=entry+1.5*r;tp2=entry+2.5*r}
+ else{stop=Math.max(entry+risk,d.res&&d.res>entry?d.res+d.a*.15:entry+risk);let r=stop-entry;tp1=entry-1.5*r;tp2=entry-2.5*r}
+ const notional=margin*lev;qty=notional/entry;loss=qty*Math.abs(entry-stop);gain1=qty*Math.abs(tp1-entry);rr=gain1/loss;
+ $('entry').textContent=fmt(entry);$('stop').textContent=fmt(stop);$('tp1').textContent=fmt(tp1);$('tp2').textContent=fmt(tp2);$('qty').textContent=fmt(qty)+' '+sym.replace('USDT','');$('loss').textContent='-'+fmt(loss)+' USDT';$('gain1').textContent='+'+fmt(gain1)+' USDT';$('rr').textContent='1 : '+(gain1/loss).toFixed(2);
+}
+async function run(){
+ const sym=$('symbol').value.trim().toUpperCase(),iv=$('interval').value;
+ if(!/^[A-Z0-9]{3,20}$/.test(sym)){ $('status').textContent='交易對格式錯誤，例如 DOGEUSDT';return}
+ $('status').textContent='正在讀取 '+sym+' '+iv+' 合約 K 線…';$('run').disabled=true;
+ try{
+  const url='https://fapi.binance.com/fapi/v1/klines?symbol='+encodeURIComponent(sym)+'&interval='+encodeURIComponent(iv)+'&limit=150';
+  const res=await fetch(url);if(!res.ok)throw Error('行情 API 回應 '+res.status+'，請稍後重試');
+  const data=await res.json();if(!Array.isArray(data))throw Error(data.msg||'找不到此合約交易對');
+  last=analyze(data);show(last);$('status').textContent='行情讀取成功｜資料來源：Binance USDⓈ-M Futures 公開 K 線';
+ }catch(e){$('status').textContent='讀取失敗：'+e.message+'。若瀏覽器阻擋連線，請稍後重試或更換網路。'}
+ finally{$('run').disabled=false}
+}
+$('run').addEventListener('click',run);
+$('auto').addEventListener('click',()=>{if(timer){clearInterval(timer);timer=null;$('auto').textContent='自動更新：關'}else{timer=setInterval(run,30000);$('auto').textContent='自動更新：開';run()}});
+run();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+\n</body></html>
