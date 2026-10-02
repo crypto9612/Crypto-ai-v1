@@ -6,7 +6,7 @@
 <title>Crypto AI・SNR 交易判讀</title>
 <style>
 :root{color-scheme:dark;--bg:#0b1220;--panel:#131e30;--line:#26364d;--muted:#9aabc2;--text:#eef4ff;--green:#31d49a;--red:#ff687d;--yellow:#f4c76b;--blue:#79aaff}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101d31,#080e19 55%);font:15px system-ui,-apple-system,"Noto Sans TC",sans-serif;color:var(--text);padding:16px 14px 36px}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101d31,#080e19 55%);font:15px system-ui,-apple-system,"Noto Sans TC",sans-serif;color:var(--text);padding:calc(16px + env(safe-area-inset-top)) 14px calc(36px + env(safe-area-inset-bottom))}
 main{max-width:760px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 16px}.brand{font-weight:800;font-size:19px}.sub{font-size:12px;color:var(--muted);margin-top:3px}
 .pill{border:1px solid var(--line);padding:6px 10px;border-radius:99px;color:var(--muted);font-size:11px}
 .panel{background:rgba(19,30,48,.96);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 8px 28px #0002}
@@ -18,6 +18,7 @@ button{background:#244a82;border:0;font-weight:700;cursor:pointer}.actions{displ
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.metric{background:#0c1626;border:1px solid #223148;border-radius:12px;padding:11px}.metric .v{font-size:17px;font-weight:750;margin-top:5px;overflow-wrap:anywhere}.metric .k{font-size:11px;color:var(--muted)}
 .bar{height:8px;border-radius:10px;background:#26364d;overflow:hidden;margin:9px 0}.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green));width:50%}
 .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.level{background:#0c1626;border-radius:10px;padding:10px}.level b{display:block;font-size:15px;margin-top:5px;overflow-wrap:anywhere}
+.chartWrap{position:relative;width:100%;height:300px;background:#0c1626;border:1px solid #223148;border-radius:12px;overflow:hidden}.chartWrap canvas{width:100%;height:100%;display:block}.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11px;color:var(--muted)}
 .note{font-size:12px;color:var(--muted);line-height:1.55}.status{font-size:12px;color:var(--muted);margin-top:10px;min-height:18px}
 ul{padding-left:18px;margin:8px 0}li{margin:5px 0;color:#cbd7e8;font-size:13px}
 footer{font-size:11px;color:#8495ac;line-height:1.6;padding:8px 2px}
@@ -30,7 +31,7 @@ footer{font-size:11px;color:#8495ac;line-height:1.6;padding:8px 2px}
 <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body><main>
-<div class="top"><div><div class="brand">◈ Crypto AI・SNR</div><div class="sub">合約行情判讀｜技術評分｜風險試算</div></div><span class="pill">多指標版 v1.1</span></div>
+<div class="top"><div><div class="brand">◈ Crypto AI・SNR</div><div class="sub">合約行情判讀｜技術評分｜風險試算</div></div><span class="pill">交易實戰版 v1.2</span></div>
 <section class="panel">
 <div class="controls">
  <div class="field"><label>交易對（USDT 永續）</label><select id="symbol"><option>DOGEUSDT</option><option>BTCUSDT</option><option>ETHUSDT</option><option>XRPUSDT</option><option>SOLUSDT</option><option>BNBUSDT</option><option>ADAUSDT</option><option>SUIUSDT</option><option>TRXUSDT</option><option>LINKUSDT</option></select></div>
@@ -46,6 +47,10 @@ footer{font-size:11px;color:#8495ac;line-height:1.6;padding:8px 2px}
 <div class="signal"><div><div class="small">AI＋SNR 綜合訊號</div><div id="signal" class="signalName wait">等待分析</div></div><div style="text-align:right"><div class="small">方向分數</div><b id="score" style="font-size:22px">—</b><div class="small">滿分 ±10</div></div></div>
 <div class="bar"><i id="scorebar"></i></div><div id="reason" class="note">分析結合 SNR、市場結構、EMA、RSI、MACD、ADX、布林通道、Stoch RSI、VWAP、成交量與 ATR。</div>
 </section>
+
+<section class="panel"><div style="font-weight:750;margin-bottom:11px">K 線・SNR 交易圖</div>
+<div class="chartWrap"><canvas id="chart"></canvas></div>
+<div class="legend"><span>蠟燭：近 60 根已收線 K 棒</span><span>S/R：支撐壓力</span><span>ENTRY / SL / TP：僅在 LONG/SHORT 訊號顯示</span></div></section>
 <section class="panel"><div style="font-weight:750;margin-bottom:11px">技術指標</div><div class="grid">
 <div class="metric"><div class="k">RSI（14）</div><div class="v" id="rsi">—</div></div>
 <div class="metric"><div class="k">EMA 9 / 21</div><div class="v" id="ema">—</div></div>
@@ -70,6 +75,8 @@ footer{font-size:11px;color:#8495ac;line-height:1.6;padding:8px 2px}
 <div class="metric"><div class="k">止損價</div><div class="v short" id="stop">—</div></div>
 <div class="metric"><div class="k">止盈 TP1（1.5R）</div><div class="v long" id="tp1">—</div></div>
 <div class="metric"><div class="k">止盈 TP2（2.5R）</div><div class="v long" id="tp2">—</div></div>
+<div class="metric"><div class="k">止盈 TP3（3.5R）</div><div class="v long" id="tp3">—</div></div>
+<div class="metric"><div class="k">名目倉位</div><div class="v" id="notional">—</div></div>
 </div><div class="grid" style="margin-top:9px">
 <div class="metric"><div class="k">預估下單數量</div><div class="v" id="qty">—</div></div>
 <div class="metric"><div class="k">止損損失（約）</div><div class="v short" id="loss">—</div></div>
@@ -77,7 +84,7 @@ footer{font-size:11px;color:#8495ac;line-height:1.6;padding:8px 2px}
 <div class="metric"><div class="k">風險報酬比</div><div class="v" id="rr">—</div></div>
 </div><p class="note">以保證金 × 槓桿估算名目倉位；損益未計手續費、資金費率、滑價及強平影響。觀望訊號不代表應該進場。</p></section>
 <section class="panel"><div style="font-weight:750">判讀依據</div><ul id="checks"><li>等待行情資料…</li></ul></section>
-<footer>此工具是多指標規則式技術評分原型，不是經訓練的預測模型，也不保證漲跌或獲利。只讀取公開行情，不會下單、不需要 API Key。請先模擬交易並自行確認交易所合約規格。</footer>
+<footer>此工具是多指標規則式技術評分與交易計畫原型，不是經訓練的預測模型，也不保證漲跌或獲利。只讀取公開行情，不會下單、不需要 API Key。請先模擬交易並自行確認交易所合約規格。</footer>
 </main>
 <script>
 const $=id=>document.getElementById(id);
@@ -121,6 +128,14 @@ function analyze(raw){
  score=Math.max(-10,Math.min(10,score));const direction=score>=5?'LONG':score<=-5?'SHORT':'WAIT';
  return {c,price,e9:e9.at(-1),e21:e21.at(-1),e50:e50.at(-1),e200:e200.at(-1),r,a,hist,sup,res,score,direction,why,ad,st,bbm,bbu,bbl,vw,volratio,structure,breakout};
 }
+function drawChart(d,plan={}){
+ const cv=$('chart'),box=cv.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,2),w=Math.max(300,box.width),h=Math.max(240,box.height);cv.width=w*ratio;cv.height=h*ratio;const x=cv.getContext('2d');x.scale(ratio,ratio);x.clearRect(0,0,w,h);
+ const bars=d.c.slice(-60),vals=bars.flatMap(b=>[b.h,b.l]);[d.sup,d.res,plan.entry,plan.stop,plan.tp1,plan.tp2,plan.tp3].forEach(v=>{if(Number.isFinite(v))vals.push(v)});let lo=Math.min(...vals),hi=Math.max(...vals),pad=(hi-lo)*.08||hi*.01;lo-=pad;hi+=pad;const L=8,R=62,T=10,B=18,pw=w-L-R,ph=h-T-B,Y=v=>T+(hi-v)/(hi-lo)*ph;
+ x.strokeStyle='#223148';x.lineWidth=1;for(let i=0;i<5;i++){let yy=T+i*ph/4;x.beginPath();x.moveTo(L,yy);x.lineTo(w-R,yy);x.stroke();let val=hi-i*(hi-lo)/4;x.fillStyle='#9aabc2';x.font='10px system-ui';x.fillText(fmt(val),w-R+5,yy+3)}
+ const step=pw/bars.length,bw=Math.max(2,step*.55);bars.forEach((b,i)=>{let xx=L+(i+.5)*step,up=b.c>=b.o;x.strokeStyle=up?'#31d49a':'#ff687d';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,Y(b.h));x.lineTo(xx,Y(b.l));x.stroke();let y=Math.min(Y(b.o),Y(b.c)),hh=Math.max(1,Math.abs(Y(b.o)-Y(b.c)));x.fillRect(xx-bw/2,y,bw,hh)});
+ function line(v,label,color,dash=[]){if(!Number.isFinite(v))return;let yy=Y(v);x.save();x.setLineDash(dash);x.strokeStyle=color;x.lineWidth=1.4;x.beginPath();x.moveTo(L,yy);x.lineTo(w-R,yy);x.stroke();x.setLineDash([]);x.fillStyle=color;x.font='bold 10px system-ui';x.fillText(label,w-R+5,yy-3);x.restore()}
+ line(d.res,'R','#ff687d',[5,4]);line(d.sup,'S','#31d49a',[5,4]);line(plan.entry,'ENTRY','#79aaff');line(plan.stop,'SL','#ff687d');line(plan.tp1,'TP1','#31d49a');line(plan.tp2,'TP2','#31d49a',[3,3]);line(plan.tp3,'TP3','#31d49a',[2,4]);
+}
 function show(d){
  const sym=$('symbol').value.trim().toUpperCase(),margin=+$('margin').value,lev=+$('leverage').value;
  $('pairLabel').textContent=sym+' 永續合約・'+$('interval').value;
@@ -133,15 +148,15 @@ function show(d){
  $('res').textContent=fmt(d.res);$('mid').textContent=fmt(d.price);$('sup').textContent=fmt(d.sup);
  $('snrnote').textContent='近 100 根已收線 K 棒的擺動高低點聚類估算；支撐/壓力可能失效。';
  $('checks').innerHTML=d.why.map(x=>'<li>'+x+'</li>').join('');
- let entry=d.price,stop,tp1,tp2,qty,loss,gain1,rr;
+ let entry=d.price,stop,tp1,tp2,tp3,qty,loss,gain1,rr;
  if(d.direction==='WAIT'||!Number.isFinite(margin)||margin<=0||!Number.isFinite(lev)||lev<=0){
-  [stop,tp1,tp2,qty,loss,gain1,rr].forEach((_,i)=>{});['entry','stop','tp1','tp2','qty','loss','gain1','rr'].forEach(id=>$(id).textContent='—');return;
+  [stop,tp1,tp2,qty,loss,gain1,rr].forEach((_,i)=>{});['entry','stop','tp1','tp2','tp3','notional','qty','loss','gain1','rr'].forEach(id=>$(id).textContent='—');drawChart(d);return;
  }
  const risk=Math.max(d.a*1.5,entry*.002);
- if(d.direction==='LONG'){stop=Math.min(entry-risk,d.sup&&d.sup<entry?d.sup-d.a*.15:entry-risk);let r=entry-stop;tp1=entry+1.5*r;tp2=entry+2.5*r}
- else{stop=Math.max(entry+risk,d.res&&d.res>entry?d.res+d.a*.15:entry+risk);let r=stop-entry;tp1=entry-1.5*r;tp2=entry-2.5*r}
+ if(d.direction==='LONG'){stop=Math.min(entry-risk,d.sup&&d.sup<entry?d.sup-d.a*.15:entry-risk);let r=entry-stop;tp1=entry+1.5*r;tp2=entry+2.5*r;tp3=entry+3.5*r}
+ else{stop=Math.max(entry+risk,d.res&&d.res>entry?d.res+d.a*.15:entry+risk);let r=stop-entry;tp1=entry-1.5*r;tp2=entry-2.5*r;tp3=entry-3.5*r}
  const notional=margin*lev;qty=notional/entry;loss=qty*Math.abs(entry-stop);gain1=qty*Math.abs(tp1-entry);rr=gain1/loss;
- $('entry').textContent=fmt(entry);$('stop').textContent=fmt(stop);$('tp1').textContent=fmt(tp1);$('tp2').textContent=fmt(tp2);$('qty').textContent=fmt(qty)+' '+sym.replace('USDT','');$('loss').textContent='-'+fmt(loss)+' USDT';$('gain1').textContent='+'+fmt(gain1)+' USDT';$('rr').textContent='1 : '+(gain1/loss).toFixed(2);
+ $('entry').textContent=fmt(entry);$('stop').textContent=fmt(stop);$('tp1').textContent=fmt(tp1);$('tp2').textContent=fmt(tp2);$('tp3').textContent=fmt(tp3);$('notional').textContent=fmt(notional)+' USDT';$('qty').textContent=fmt(qty)+' '+sym.replace('USDT','');$('loss').textContent='-'+fmt(loss)+' USDT';$('gain1').textContent='+'+fmt(gain1)+' USDT';$('rr').textContent='1 : '+(gain1/loss).toFixed(2);drawChart(d,{entry,stop,tp1,tp2,tp3});
 }
 async function run(){
  const sym=$('symbol').value.trim().toUpperCase(),iv=$('interval').value;

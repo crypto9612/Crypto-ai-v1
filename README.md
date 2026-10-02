@@ -1,13 +1,5 @@
-# Crypto AI・SNR 手機 App（PWA）
+# Crypto AI・SNR 手機 App (PWA) v1.2
 
-這是可安裝到 iPhone 主畫面的漸進式網頁 App 套件，不是已上架 App Store 的原生 iOS App。
+交易實戰版：新增原生 Canvas K 線圖、SNR 支撐/壓力、ENTRY/SL/TP1/TP2/TP3 圖上標記、名目倉位與損益/風險報酬試算，並修正 iPhone Safe Area。
 
-## 部署與安裝
-1. 將資料夾內全部檔案上傳到支援 HTTPS 的靜態網站主機。
-2. 確保 index.html、manifest.webmanifest、sw.js 和 icons/ 位於同一網站目錄。
-3. 用 iPhone Safari 開啟 HTTPS 網址。
-4. 點分享 →「加入主畫面」→「加入」。
-
-## 功能與限制
-讀取 Binance USDⓈ-M Futures 公開 K 線，計算 SNR、RSI、EMA、MACD、ATR 和風險試算。
-不會自動下單、不需要交易所 API Key。即時行情需要網路。這是規則式技術訊號原型，不是經訓練的機器學習模型，也不保證獲利。
+仍為規則式技術分析原型，不會自動下單、不需要交易所 API Key，也不保證獲利。損益估算未包含手續費、資金費率、滑價與強平因素。
