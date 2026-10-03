@@ -1,0 +1,208 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101827"><title>Crypto AI・SNR OKX v1.3.10</title><style>
+:root{color-scheme:dark;--panel:#131e30;--line:#26364d;--muted:#9aabc2;--text:#eef4ff;--green:#31d49a;--red:#ff687d;--blue:#79aaff}*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101d31,#080e19 55%);font:15px system-ui,-apple-system,"Noto Sans TC",sans-serif;color:var(--text);padding:calc(16px + env(safe-area-inset-top)) 14px calc(36px + env(safe-area-inset-bottom))}main{max-width:760px;margin:auto}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:4px 0 16px}.brand{font-weight:800;font-size:20px}.pill{border:1px solid var(--line);padding:6px 10px;border-radius:99px;color:var(--muted);font-size:11px}.panel{background:rgba(19,30,48,.96);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.metric{background:#0c1626;border:1px solid #223148;border-radius:12px;padding:11px}.k,.small,.note{font-size:11px;color:var(--muted)}.note{line-height:1.65}.v{font-size:18px;font-weight:750;margin-top:5px}.green{color:var(--green)}.red{color:var(--red)}label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}input,select{width:100%;background:#0c1626;color:var(--text);border:1px solid #26364d;border-radius:10px;padding:11px;font:inherit}button{width:100%;border:0;border-radius:10px;background:#244a82;color:#fff;padding:13px;font:inherit;font-weight:750;margin-top:10px}.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.quick button{background:#1a2b43;padding:9px 4px;font-size:12px}.bar{height:8px;border-radius:8px;background:#26364d;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--blue);width:0}.snrgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.snr{background:#0c1626;border:1px solid #223148;border-radius:12px;padding:10px}.snr b{display:block;margin-bottom:5px}.status{font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px 4px;border-bottom:1px solid #26364d;text-align:right}th:first-child,td:first-child{text-align:left}@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}.snrgrid{grid-template-columns:repeat(4,1fr)}}
+</style></head><body><main><div class="top"><div><div class="brand">◈ Crypto AI・SNR</div><div class="small">OKX USDT 永續・v1.3.10 Walk-Forward 詳細診斷版</div></div><span class="pill">OKX v1.3.10</span></div>
+<section class="panel"><b>回測設定</b><p class="note">OKX USDT 永續｜LONG/SHORT｜每週最多 15 筆｜TP1 1.5R 全平｜訊號於 K 線收盤確認，下一根 15m K 線開盤成交｜同 K 同碰 TP/SL 時保守計 SL。</p>
+<div class="grid">
+<div><label>交易對</label><select id="symbol"><option>ETH-USDT-SWAP</option><option>BTC-USDT-SWAP</option><option>SOL-USDT-SWAP</option><option>DOGE-USDT-SWAP</option><option>XRP-USDT-SWAP</option></select></div>
+<div><label>槓桿</label><select id="leverage"><option value="5">5×</option><option value="10" selected>10×</option><option value="20">20×</option></select></div>
+<div><label>起始資金（USDT）</label><input id="capital" type="number" min="1" step="1" value="100"></div>
+<div><label>每筆使用保證金（USDT）</label><input id="margin" type="number" min="0.1" step="0.1" value="10"></div>
+<div><label>單邊手續費（%）</label><input id="fee" type="number" min="0" step="0.001" value="0.05"></div>
+<div><label>單邊滑價（%）</label><input id="slippage" type="number" min="0" step="0.001" value="0.02"></div>
+<div><label>開始日期</label><input id="start" type="date"></div><div><label>結束日期</label><input id="end" type="date"></div></div>
+<div class="quick"><button data-m="3">3個月</button><button data-m="6">6個月</button><button data-m="12">1年</button><button data-m="24">2年</button></div>
+<div style="margin-top:10px"><label>SNR 驗證模式</label><select id="snrMode"><option value="ALL" selected>四種模式全部比較</option><option value="15m">15m</option><option value="1H">15m + 1H</option><option value="4H">15m + 1H + 4H</option><option value="1D">15m + 1H + 4H + 1D</option></select></div>
+<div style="margin-top:10px"><label>樣本內 / 樣本外切分</label><select id="oosSplit"><option value="50" selected>50% / 50%</option><option value="60">60% / 40%</option><option value="70">70% / 30%</option></select></div>
+<button id="run">開始 v1.3.10 回測</button><button id="runOOS" style="background:#315f9e">開始 5 交易對樣本外驗證</button><button id="runWF" style="background:#315f9e">開始 5 交易對 Walk-Forward 驗證</button><button id="runCross" style="background:#315f9e">開始 5 交易對全期間交叉驗證</button><div class="bar"><i id="prog"></i></div><div id="status" class="status">請設定條件後開始。相同交易對與日期會使用 IndexedDB K 線快取。</div><button id="clearCache" style="background:#26364d">清除 K 線快取</button></section>
+<section class="panel"><b>多週期 SNR</b><p class="note">以每個週期最近的 pivot 群聚計算支撐 / 壓力；回測訊號只使用當時已完成的 K 線。</p><div class="snrgrid"><div class="snr"><b>15m</b><span id="s15">—</span></div><div class="snr"><b>1H</b><span id="s1h">—</span></div><div class="snr"><b>4H</b><span id="s4h">—</span></div><div class="snr"><b>1D</b><span id="s1d">—</span></div></div></section>
+<section class="panel"><b>K 線 / 資金診斷</b>
+<div class="grid" style="margin-top:11px">
+<div class="metric"><div class="k">實際首根 K 線</div><div class="v" id="firstK">—</div></div>
+<div class="metric"><div class="k">實際末根 K 線</div><div class="v" id="lastK">—</div></div>
+<div class="metric"><div class="k">15m K 線總數</div><div class="v" id="kCount">—</div></div>
+<div class="metric"><div class="k">缺口數</div><div class="v" id="gapCount">—</div></div>
+<div class="metric"><div class="k">資料完整率</div><div class="v" id="coverage">—</div></div>
+<div class="metric"><div class="k">資金不足跳過</div><div class="v" id="capitalSkips">—</div></div>
+<div class="metric"><div class="k">LONG 績效</div><div class="v" id="longPerf">—</div></div>
+<div class="metric"><div class="k">SHORT 績效</div><div class="v" id="shortPerf">—</div></div>
+</div><p class="note" id="diagNote">回測完成後顯示資料完整性與方向績效。</p></section><section class="panel" id="comparePanel"><b>四模式比較</b><div style="overflow:auto;margin-top:8px"><table><thead><tr><th>模式</th><th>最終資金</th><th>淨損益</th><th>交易</th><th>勝率</th><th>最大回撤</th></tr></thead><tbody id="compareRows"><tr><td colspan="6">—</td></tr></tbody></table></div></section><section class="panel"><b>OKX v1.3.10 回測結果</b><div class="grid" style="margin-top:11px"><div class="metric"><div class="k">最終資金</div><div class="v" id="equity">—</div></div><div class="metric"><div class="k">淨損益</div><div class="v" id="pnl">—</div></div><div class="metric"><div class="k">總交易</div><div class="v" id="trades">—</div></div><div class="metric"><div class="k">每週平均</div><div class="v" id="weekly">—</div></div><div class="metric"><div class="k">勝率</div><div class="v" id="winrate">—</div></div><div class="metric"><div class="k">最大回撤</div><div class="v red" id="dd">—</div></div><div class="metric"><div class="k">LONG / SHORT</div><div class="v" id="dirs">—</div></div><div class="metric"><div class="k">勝 / 敗</div><div class="v" id="wl">—</div></div></div></section>
+<section class="panel"><b>年度＋LONG / SHORT 拆分</b>
+<p class="note">依交易進場時間切成每 12 個月一段；各段分別統計 ALL、LONG、SHORT。最大回撤依該分段交易損益序列重新計算。</p>
+<div style="overflow:auto;margin-top:8px"><table>
+<thead><tr><th>期間 / 方向</th><th>交易</th><th>勝率</th><th>淨損益</th><th>最大回撤</th></tr></thead>
+<tbody id="annualRows"><tr><td colspan="5">—</td></tr></tbody>
+</table></div></section><section class="panel"><b>5 交易對 Walk-Forward + Warm-up</b>
+<p class="note">固定規則、不調參：每一輪使用前 12 個月作為歷史/觀察區，接著驗證 3 個月；每 3 個月向前滾動。驗證段可讀取前段 K 線作 EMA、ADX、pivot、1D SNR 等暖機，但暖機區禁止產生交易。</p>
+<div style="overflow:auto;margin-top:8px"><table>
+<thead><tr><th>交易對</th><th>視窗</th><th>正報酬視窗</th><th>OOS總損益</th><th>最差回撤</th><th>總勝率</th><th>LONG交易</th><th>LONG勝率</th><th>SHORT交易</th><th>SHORT勝率</th><th>LONG損益</th><th>SHORT損益</th><th>交易</th></tr></thead>
+<tbody id="wfRows"><tr><td colspan="11">—</td></tr></tbody>
+</table></div></section><section class="panel"><b>Walk-Forward 每視窗詳細診斷</b><p class="note">顯示每個 3 個月 OOS 視窗的實際交易勝率、LONG/SHORT 勝率、Profit Factor、平均每筆損益、最大連續虧損與最大回撤。</p><div style="overflow:auto;margin-top:8px"><table><thead><tr><th>交易對</th><th>OOS期間</th><th>交易</th><th>勝率</th><th>LONG交易</th><th>LONG勝率</th><th>SHORT交易</th><th>SHORT勝率</th><th>淨損益</th><th>PF</th><th>平均/筆</th><th>最大連虧</th><th>最大回撤</th></tr></thead><tbody id="wfDetailRows"><tr><td colspan="11">—</td></tr></tbody></table></div></section><section class="panel"><b>5 交易對樣本內 / 樣本外驗證</b><p class="note">依時間順序切分：前段 IS（樣本內），後段 OOS（樣本外）；兩段獨立回測，不修改策略參數。</p><div style="overflow:auto;margin-top:8px"><table><thead><tr><th>交易對</th><th>IS 損益</th><th>IS 回撤</th><th>OOS 損益</th><th>OOS 回撤</th><th>OOS LONG</th><th>OOS SHORT</th><th>OOS 勝率</th></tr></thead><tbody id="oosRows"><tr><td colspan="8">—</td></tr></tbody></table></div></section><section class="panel"><b>5 交易對交叉驗證</b>
+<p class="note">使用完全相同的日期、資金、槓桿、手續費、滑價與 SNR 模式，依序測試 ETH / BTC / SOL / DOGE / XRP。年度欄位顯示每 12 個月的 ALL 淨損益；LONG/SHORT 為整段淨損益。</p>
+<div style="overflow:auto;margin-top:8px"><table>
+<thead><tr><th>交易對</th><th>最終資金</th><th>淨損益</th><th>最大回撤</th><th>LONG</th><th>SHORT</th><th>第1年</th><th>第2年</th></tr></thead>
+<tbody id="crossRows"><tr><td colspan="8">—</td></tr></tbody>
+</table></div></section><section class="panel"><b>最近 20 筆交易</b><div style="overflow:auto;margin-top:8px"><table><thead><tr><th>日期</th><th>方向</th><th>結果</th><th>損益</th></tr></thead><tbody id="rows"><tr><td colspan="4">—</td></tr></tbody></table></div></section><footer class="note">v1.3.10：完整保留 v1.3.9 的策略、Warm-up、Walk-Forward 與進出場參數；修正 Walk-Forward LONG/SHORT 統計欄位（dir），並新增 LONG/SHORT 實際交易數，讓方向勝率以各方向「勝場 ÷ 交易數」計算。<br><br>回測不代表未來績效。尚未計入資金費率、維持保證金與強平機制；手續費與滑價依上方設定估算，實際成交可能不同。</footer></main><script>
+const $=x=>document.getElementById(x),mean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:NaN;function ema(a,p){if(!a.length)return[];let k=2/(p+1),v=a[0],o=[v];for(let i=1;i<a.length;i++){v=a[i]*k+v*(1-k);o.push(v)}return o}function rsi(a,p=14){if(a.length<=p)return 50;let g=0,l=0;for(let i=1;i<=p;i++){let d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}g/=p;l/=p;for(let i=p+1;i<a.length;i++){let d=a[i]-a[i-1];g=(g*(p-1)+Math.max(d,0))/p;l=(l*(p-1)+Math.max(-d,0))/p}return l===0?100:100-100/(1+g/l)}function atr(c,p=14){let t=[];for(let i=1;i<c.length;i++)t.push(Math.max(c[i].h-c[i].l,Math.abs(c[i].h-c[i-1].c),Math.abs(c[i].l-c[i-1].c)));return mean(t.slice(-p))}function pivots(c){let highs=[],lows=[];for(let i=2;i<c.length-2;i++){if(c[i].h>c[i-1].h&&c[i].h>c[i-2].h&&c[i].h>c[i+1].h&&c[i].h>c[i+2].h)highs.push(c[i].h);if(c[i].l<c[i-1].l&&c[i].l<c[i-2].l&&c[i].l<c[i+1].l&&c[i].l<c[i+2].l)lows.push(c[i].l)}return{highs,lows}}function nearestCluster(vals,price,above){let xs=vals.filter(x=>above?x>price:x<price).sort((a,b)=>Math.abs(a-price)-Math.abs(b-price));if(!xs.length)return null;let near=xs[0],band=vals.filter(x=>Math.abs(x-near)<=Math.abs(price)*.0025);return mean(band)}function sma(a,p){return a.length>=p?mean(a.slice(-p)):NaN}function calcADX(c,p=14){let tr=[],plus=[],minus=[];for(let i=1;i<c.length;i++){const up=c[i].h-c[i-1].h,down=c[i-1].l-c[i].l;plus.push(up>down&&up>0?up:0);minus.push(down>up&&down>0?down:0);tr.push(Math.max(c[i].h-c[i].l,Math.abs(c[i].h-c[i-1].c),Math.abs(c[i].l-c[i-1].c)))}if(!tr.length)return{adx:0,pdi:0,mdi:0};const n=Math.min(p,tr.length),av=mean(tr.slice(-n)),pdi=100*mean(plus.slice(-n))/(av||1),mdi=100*mean(minus.slice(-n))/(av||1);let dx=[];for(let i=Math.max(p,tr.length-p*2);i<tr.length;i++){const t=mean(tr.slice(Math.max(0,i-p+1),i+1)),pp=100*mean(plus.slice(Math.max(0,i-p+1),i+1))/(t||1),mm=100*mean(minus.slice(Math.max(0,i-p+1),i+1))/(t||1);dx.push(100*Math.abs(pp-mm)/(pp+mm||1))}return{adx:mean(dx.slice(-p))||0,pdi,mdi}}
+function analyzeClosed(c){const closes=c.map(x=>x.c),vols=c.map(x=>x.v),e9=ema(closes,9),e21=ema(closes,21),e50=ema(closes,50);const r=rsi(closes),a=atr(c),m12=ema(closes,12),m26=ema(closes,26),m=m12.map((x,i)=>x-m26[i]),sig=ema(m,9),hist=m.at(-1)-sig.at(-1),price=closes.at(-1);const {highs,lows}=pivots(c.slice(-100)),sup=nearestCluster(lows,price,false),res=nearestCluster(highs,price,true),ad=calcADX(c);const recent=c.slice(-50),pv=recent.reduce((s,x)=>s+((x.h+x.l+x.c)/3)*x.v,0),vv=recent.reduce((s,x)=>s+x.v,0),vw=pv/(vv||1),volma=sma(vols,20),volratio=vols.at(-1)/(volma||1);const ph=highs.slice(-2),pl=lows.slice(-2);let structure='mix';if(ph.length>1&&pl.length>1){if(ph[1]>ph[0]&&pl[1]>pl[0])structure='HH';else if(ph[1]<ph[0]&&pl[1]<pl[0])structure='LH'}let breakout='in',prev=c.at(-2);if(res&&price>res&&prev.c<=res)breakout=volratio>=1.2?'up':'weak';else if(sup&&price<sup&&prev.c>=sup)breakout=volratio>=1.2?'down':'weak';let score=0;if(e9.at(-1)>e21.at(-1))score++;else score--;if(price>e50.at(-1))score++;else score--;if(hist>0)score++;else score--;if(r>=52&&r<70)score++;else if(r<=48&&r>30)score--;if(ad.adx>=20){if(ad.pdi>ad.mdi)score++;else score--}if(price>vw)score++;else score--;if(structure==='HH')score++;else if(structure==='LH')score--;if(sup&&((price-sup)/price)<.012)score++;if(res&&((res-price)/price)<.012)score--;if(breakout==='up')score+=2;else if(breakout==='down')score-=2;score=Math.max(-10,Math.min(10,score));return{price,a,sup,res,score,ad,volratio,direction:score>=5?'LONG':score<=-5?'SHORT':'WAIT'}}
+function aggregate(c,n){let out=[];for(let i=0;i+n<=c.length;i+=n){let z=c.slice(i,i+n);out.push({t:z[0].t,o:z[0].o,h:Math.max(...z.map(x=>x.h)),l:Math.min(...z.map(x=>x.l)),c:z.at(-1).c,v:z.reduce((s,x)=>s+x.v,0)})}return out}function snrAt(c){if(c.length<10)return{sup:null,res:null};let price=c.at(-1).c,{highs,lows}=pivots(c.slice(-120));return{sup:nearestCluster(lows,price,false),res:nearestCluster(highs,price,true)}}function trendTF(c){if(c.length<55)return 0;let cl=c.map(x=>x.c),e21=ema(cl,21).at(-1),e50=ema(cl,50).at(-1),p=cl.at(-1);return p>e21&&e21>e50?1:p<e21&&e21<e50?-1:0}
+function tfContext(c,i){let base=c.slice(Math.max(0,i-96*220),i+1),h1=aggregate(base,4),h4=aggregate(base,16),d1=aggregate(base,96);return{h1,h4,d1,s15:snrAt(base.slice(-250)),s1h:snrAt(h1),s4h:snrAt(h4),s1d:snrAt(d1),t1:trendTF(h1),t4:trendTF(h4),td:trendTF(d1)}}function nearSupport(s,p){return !!s&&s<p&&(p-s)/p<.015}function nearResistance(r,p){return !!r&&r>p&&(r-p)/p<.015}function passMulti(dir,p,ctx,mode){let levels=mode==='15m'?[]:mode==='1H'?[['t1','s1h']]:mode==='4H'?[['t1','s1h'],['t4','s4h']]:[['t1','s1h'],['t4','s4h'],['td','s1d']];for(const [tk,sk] of levels){let t=ctx[tk],s=ctx[sk]||{};/* 真正讓高週期 SNR 參與：避免多單撞壓力、空單撞支撐；同時保留逆勢否決 */if(dir==='LONG'){if(nearResistance(s.res,p))return false;if(t<0&&!nearSupport(s.sup,p))return false}else{if(nearSupport(s.sup,p))return false;if(t>0&&!nearResistance(s.res,p))return false}}return true}
+const DBN='crypto-ai-snr-cache-v134',STORE='klines';function dbOpen(){return new Promise((ok,no)=>{let q=indexedDB.open(DBN,1);q.onupgradeneeded=()=>q.result.createObjectStore(STORE);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}async function cacheGet(k){try{let d=await dbOpen();return await new Promise((ok,no)=>{let q=d.transaction(STORE).objectStore(STORE).get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>no(q.error)})}catch(e){return null}}async function cachePut(k,v){try{let d=await dbOpen();await new Promise((ok,no)=>{let q=d.transaction(STORE,'readwrite').objectStore(STORE).put(v,k);q.onsuccess=()=>ok();q.onerror=()=>no(q.error)})}catch(e){}}async function cacheClear(){try{let d=await dbOpen();await new Promise((ok,no)=>{let q=d.transaction(STORE,'readwrite').objectStore(STORE).clear();q.onsuccess=()=>ok();q.onerror=()=>no(q.error)})}catch(e){}}async function fetchRange(start,end,symbol){let key=symbol+'|15m|'+start+'|'+end,cached=await cacheGet(key);if(cached&&cached.length){$('status').textContent='使用瀏覽器 K 線快取… '+cached.length.toLocaleString()+' 根';$('prog').style.width='100%';return cached}let out=[],after=end+1,last=0;while(true){let u='https://www.okx.com/api/v5/market/history-candles?instId='+encodeURIComponent(symbol)+'&bar=15m&limit=300&after='+after,r=await fetch(u);if(!r.ok)throw Error('OKX API '+r.status);let j=await r.json();if(j.code!=='0')throw Error('OKX '+j.code+' '+(j.msg||''));let a=j.data||[];if(!a.length)break;for(const x of a){let ts=+x[0];if(ts>=start&&ts<=end&&x[8]==='1')out.push(x)}let oldest=Math.min(...a.map(x=>+x[0]));if(!isFinite(oldest)||oldest<=start||oldest===last)break;last=oldest;after=oldest;$('prog').style.width=Math.min(99,(end-oldest)/(end-start)*100)+'%';$('status').textContent='下載 OKX 15m K 線… '+out.length.toLocaleString()+' 根';await new Promise(q=>setTimeout(q,115))}let m=new Map();for(const x of out)m.set(+x[0],x);let data=[...m.values()].sort((a,b)=>+a[0]-+b[0]).map(x=>({t:+x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));if(data.length)await cachePut(key,data);return data}
+function weekKey(t){let d=new Date(t),onejan=new Date(Date.UTC(d.getUTCFullYear(),0,1)),w=Math.ceil((((d-onejan)/86400000)+onejan.getUTCDay()+1)/7);return d.getUTCFullYear()+'-'+w}
+function backtest(c,mode,opt,tradeStart=0){let equity=opt.capital,peak=opt.capital,maxDD=0,pos=null,pending=null,tr=[],weekly={},capitalSkips=0;for(let i=250;i<c.length-1;i++){let bar=c[i];
+if(pending&&!pos){let entryRaw=bar.o,entry=pending.dir==='LONG'?entryRaw*(1+opt.slip):entryRaw*(1-opt.slip),risk=Math.max(pending.atr*1.5,entry*.002),stop,tp;if(pending.dir==='LONG'){stop=Math.min(entry-risk,pending.sup&&pending.sup<entry?pending.sup-pending.atr*.15:entry-risk);tp=entry+1.5*(entry-stop)}else{stop=Math.max(entry+risk,pending.res&&pending.res>entry?pending.res+pending.atr*.15:entry+risk);tp=entry-1.5*(stop-entry)}let notional=opt.margin*opt.leverage,qty=notional/entry,entryFee=notional*opt.fee;equity-=entryFee;pos={dir:pending.dir,entry,stop,tp,qty,entryT:bar.t,entryFee,signalT:pending.signalT};pending=null;peak=Math.max(peak,equity);maxDD=Math.max(maxDD,(peak-equity)/peak*100)}
+if(pos){let hitSL=pos.dir==='LONG'?bar.l<=pos.stop:bar.h>=pos.stop,hitTP=pos.dir==='LONG'?bar.h>=pos.tp:bar.l<=pos.tp;if(hitSL||hitTP){let raw=hitSL?pos.stop:pos.tp,exit=pos.dir==='LONG'?raw*(1-opt.slip):raw*(1+opt.slip),gross=pos.qty*(pos.dir==='LONG'?exit-pos.entry:pos.entry-exit),exitFee=Math.abs(pos.qty*exit)*opt.fee,pnl=gross-exitFee;equity+=pnl;tr.push({...pos,exit,pnl:pnl-pos.entryFee,gross,result:hitSL?'SL':'TP1',exitT:bar.t});peak=Math.max(peak,equity);maxDD=Math.max(maxDD,(peak-equity)/peak*100);pos=null}continue}
+if(bar.t<tradeStart)continue;if(equity<opt.margin){capitalSkips++;continue}let w=c.slice(Math.max(0,i-249),i+1),d=analyzeClosed(w);if(d.direction==='WAIT')continue;let ctx=tfContext(c,i);if(d.direction==='LONG'){if(ctx.t1!==1||!(d.ad.adx>=20&&d.ad.pdi>d.ad.mdi)||d.volratio<.8||d.score<6)continue}else{if(ctx.t1!==-1||!(d.ad.adx>=20&&d.ad.mdi>d.ad.pdi)||d.volratio<.8||d.score>-6)continue}if(!passMulti(d.direction,d.price,ctx,mode))continue;let wk=weekKey(bar.t);weekly[wk]=weekly[wk]||0;if(weekly[wk]>=15)continue;pending={dir:d.direction,atr:d.a,sup:d.sup,res:d.res,signalT:bar.t};weekly[wk]++}return{equity,tr,maxDD,capitalSkips}}
+function fmtS(s){return 'R '+(s.res?s.res.toFixed(4):'—')+' / S '+(s.sup?s.sup.toFixed(4):'—')}
+function stats(r,capital){let wins=r.tr.filter(x=>x.pnl>0).length,losses=r.tr.length-wins,long=r.tr.filter(x=>x.dir==='LONG').length,short=r.tr.length-long;return{wins,losses,long,short,pnl:r.equity-capital,wr:r.tr.length?wins/r.tr.length*100:0}}
+function fill(r,start,end,capital){let z=stats(r,capital),weeks=Math.max(1,(end-start)/604800000);$('equity').textContent=r.equity.toFixed(2)+' USDT';$('pnl').textContent=(z.pnl>=0?'+':'')+z.pnl.toFixed(2)+' USDT';$('pnl').className='v '+(z.pnl>=0?'green':'red');$('trades').textContent=r.tr.length;$('weekly').textContent=(r.tr.length/weeks).toFixed(1)+' 筆';$('winrate').textContent=z.wr.toFixed(1)+'%';$('dd').textContent=r.maxDD.toFixed(1)+'%';$('dirs').textContent=z.long+' / '+z.short;$('wl').textContent=z.wins+' / '+z.losses;$('rows').innerHTML=r.tr.slice(-20).reverse().map(x=>'<tr><td>'+new Date(x.entryT).toLocaleDateString('zh-TW')+'</td><td>'+x.dir+'</td><td>'+x.result+'</td><td class="'+(x.pnl>=0?'green':'red')+'">'+(x.pnl>=0?'+':'')+x.pnl.toFixed(3)+'</td></tr>').join('')||'<tr><td colspan="4">無交易</td></tr>'}
+
+function completenessCheck(c,start,end){
+ const step=15*60*1000;
+ const expected=Math.max(1,Math.floor((end-start)/step)+1);
+ if(!c.length)return{ok:false,expected,coverage:0,startMiss:expected,endMiss:0,gaps:0,missing:0};
+ let gaps=0,missing=0;
+ for(let i=1;i<c.length;i++){
+   const d=c[i].t-c[i-1].t;
+   if(d>step*1.5){gaps++;missing+=Math.max(0,Math.round(d/step)-1)}
+ }
+ const startMiss=Math.max(0,Math.round((c[0].t-start)/step));
+ const endMiss=Math.max(0,Math.round((end-c[c.length-1].t)/step));
+ const coverage=Math.min(100,c.length/expected*100);
+ // 容許日期邊界與尚未完成 K 線的小幅差異；真正缺一年會直接攔截。
+ const ok=coverage>=99 && gaps===0 && startMiss<=96 && endMiss<=96;
+ return{ok,expected,coverage,startMiss,endMiss,gaps,missing};
+}
+function dataDiagnostics(c,start,end){
+ const step=15*60*1000;
+ let gaps=0,missing=0;
+ for(let i=1;i<c.length;i++){let d=c[i].t-c[i-1].t;if(d>step*1.5){gaps++;missing+=Math.max(0,Math.round(d/step)-1)}}
+ let expected=Math.max(1,Math.floor((end-start)/step)+1);
+ let coverage=Math.min(100,c.length/expected*100);
+ return{gaps,missing,expected,coverage}
+}
+function sideStats(tr,dir){
+ let a=tr.filter(x=>x.dir===dir),wins=a.filter(x=>x.pnl>0).length,pnl=a.reduce((q,x)=>q+x.pnl,0);
+ return{n:a.length,wins,pnl,wr:a.length?wins/a.length*100:0}
+}
+function fillDiagnostics(c,start,end,r){
+ let d=dataDiagnostics(c,start,end),L=sideStats(r.tr,'LONG'),S=sideStats(r.tr,'SHORT');
+ $('firstK').textContent=new Date(c[0].t).toLocaleString('zh-TW');
+ $('lastK').textContent=new Date(c.at(-1).t).toLocaleString('zh-TW');
+ $('kCount').textContent=c.length.toLocaleString();
+ $('gapCount').textContent=d.gaps+' 段 / 約 '+d.missing+' 根';
+ $('coverage').textContent=d.coverage.toFixed(2)+'%';
+ $('capitalSkips').textContent=(r.capitalSkips||0).toLocaleString()+' 根';
+ $('longPerf').textContent=(L.pnl>=0?'+':'')+L.pnl.toFixed(2)+'｜'+L.wr.toFixed(1)+'% ('+L.n+')';
+ $('longPerf').className='v '+(L.pnl>=0?'green':'red');
+ $('shortPerf').textContent=(S.pnl>=0?'+':'')+S.pnl.toFixed(2)+'｜'+S.wr.toFixed(1)+'% ('+S.n+')';
+ $('shortPerf').className='v '+(S.pnl>=0?'green':'red');
+ $('diagNote').textContent='預期約 '+d.expected.toLocaleString()+' 根；實得 '+c.length.toLocaleString()+' 根。缺口以相鄰 15m K 線時間差偵測。LONG/SHORT 顯示：淨損益｜勝率（交易數）。';
+}
+
+function periodTradeStats(tr,capital){
+ let wins=tr.filter(x=>x.pnl>0).length,pnl=tr.reduce((q,x)=>q+x.pnl,0),eq=capital,peak=capital,maxDD=0;
+ for(const x of tr){eq+=x.pnl;peak=Math.max(peak,eq);if(peak>0)maxDD=Math.max(maxDD,(peak-eq)/peak*100)}
+ return{n:tr.length,wr:tr.length?wins/tr.length*100:0,pnl,maxDD}
+}
+function addMonthsUTC(t,m){
+ let d=new Date(t),day=d.getUTCDate(),x=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+m,1,d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds(),d.getUTCMilliseconds()));
+ let last=new Date(Date.UTC(x.getUTCFullYear(),x.getUTCMonth()+1,0)).getUTCDate();
+ x.setUTCDate(Math.min(day,last));return x.getTime()
+}
+function shortDate(t){return new Date(t).toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'})}
+function fillAnnualSplit(r,start,end,capital){
+ let rows=[],p=start,idx=1;
+ while(p<end){
+   let q=Math.min(addMonthsUTC(p,12),end+1),seg=r.tr.filter(x=>x.entryT>=p&&x.entryT<q);
+   for(const dir of ['ALL','LONG','SHORT']){
+     let a=dir==='ALL'?seg:seg.filter(x=>x.dir===dir),z=periodTradeStats(a,capital);
+     let label='第'+idx+'年 '+shortDate(p)+'～'+shortDate(Math.min(q-1,end))+' '+dir;
+     rows.push('<tr><td>'+label+'</td><td>'+z.n+'</td><td>'+z.wr.toFixed(1)+'%</td><td class="'+(z.pnl>=0?'green':'red')+'">'+(z.pnl>=0?'+':'')+z.pnl.toFixed(2)+'</td><td>'+z.maxDD.toFixed(1)+'%</td></tr>');
+   }
+   p=q;idx++;
+ }
+ $('annualRows').innerHTML=rows.join('')||'<tr><td colspan="5">無交易</td></tr>';
+}
+
+function yearlyPnls(r,start,end){
+ let out=[],p=start;
+ while(p<end){
+   let q=Math.min(addMonthsUTC(p,12),end+1);
+   let seg=r.tr.filter(x=>x.entryT>=p&&x.entryT<q);
+   out.push(seg.reduce((a,x)=>a+x.pnl,0));
+   p=q;
+ }
+ return out;
+}
+function signed2(x){return (x>=0?'+':'')+x.toFixed(2)}
+function setRange(m){let e=new Date(),s=new Date(e);s.setMonth(s.getMonth()-m);$('end').value=e.toISOString().slice(0,10);$('start').value=s.toISOString().slice(0,10)}document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>setRange(+b.dataset.m));setRange(12);
+$('clearCache').onclick=async()=>{await cacheClear();$('status').textContent='K 線快取已清除。下次回測會重新從 OKX 下載。';$('prog').style.width='0'};
+
+
+function tradeDiag(tr){let n=tr.length,w=0,gp=0,gl=0,sum=0,streak=0,maxLossStreak=0;for(const x of tr){sum+=x.pnl;if(x.pnl>0){w++;gp+=x.pnl;streak=0}else if(x.pnl<0){gl+=-x.pnl;streak++;maxLossStreak=Math.max(maxLossStreak,streak)}else streak=0}return{n,w,wr:n?w/n*100:0,pf:gl>0?gp/gl:(gp>0?Infinity:0),avg:n?sum/n:0,maxLossStreak}}
+function fmtPF(v){return v===Infinity?'∞':v.toFixed(2)}
+function dmy(t){let d=new Date(t);return d.getUTCFullYear()+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+String(d.getUTCDate()).padStart(2,'0')}
+$('runWF').onclick=async()=>{try{
+let start=new Date($('start').value+'T00:00:00').getTime(),end=new Date($('end').value+'T23:59:59').getTime();if(!start||!end||start>=end)throw Error('日期設定不正確');
+let capital=+$('capital').value,margin=+$('margin').value,leverage=+$('leverage').value,fee=+$('fee').value/100,slip=+$('slippage').value/100;if(!(capital>0&&margin>0&&leverage>0))throw Error('資金設定不正確');if(margin>capital)throw Error('每筆保證金不可高於起始資金');
+let selected=$('snrMode').value,mode=selected==='ALL'?'1D':selected,symbols=['ETH-USDT-SWAP','BTC-USDT-SWAP','SOL-USDT-SWAP','DOGE-USDT-SWAP','XRP-USDT-SWAP'],opt={capital,margin,leverage,fee,slip},rows=[],detailRows=[];
+$('runWF').disabled=true;$('runOOS').disabled=true;$('runCross').disabled=true;$('run').disabled=true;$('prog').style.width='0';
+for(let si=0;si<symbols.length;si++){let symbol=symbols[si];$('status').textContent='Walk-Forward 詳細診斷 '+(si+1)+'/5：'+symbol+'…';let c=await fetchRange(start,end,symbol);if(c.length<600)throw Error(symbol+' K 線不足');let chk=completenessCheck(c,start,end);if(!chk.ok)throw Error(symbol+' 歷史資料不完整（'+chk.coverage.toFixed(2)+'%）');
+let trainStart=start,testStart=addMonthsUTC(trainStart,12),windows=[],allTr=[];
+while(testStart<end){let testEnd=Math.min(addMonthsUTC(testStart,3),end+1);if(testEnd-testStart<20*86400000)break;let wc=c.filter(x=>x.t>=trainStart&&x.t<testEnd),r=backtest(wc,mode,opt,testStart),z=stats(r,capital),L=sideStats(r.tr,'LONG'),S=sideStats(r.tr,'SHORT'),D=tradeDiag(r.tr),LD=tradeDiag(r.tr.filter(x=>x.dir==='LONG')),SD=tradeDiag(r.tr.filter(x=>x.dir==='SHORT'));windows.push({pnl:z.pnl,dd:r.maxDD,L:L.pnl,S:S.pnl,n:r.tr.length});allTr.push(...r.tr);detailRows.push('<tr><td>'+symbol.replace('-USDT-SWAP','')+'</td><td>'+dmy(testStart)+'～'+dmy(testEnd-1)+'</td><td>'+D.n+'</td><td>'+D.wr.toFixed(1)+'%</td><td>'+LD.n+'</td><td>'+LD.wr.toFixed(1)+'%</td><td>'+SD.n+'</td><td>'+SD.wr.toFixed(1)+'%</td><td class="'+(z.pnl>=0?'green':'red')+'">'+signed2(z.pnl)+'</td><td>'+fmtPF(D.pf)+'</td><td class="'+(D.avg>=0?'green':'red')+'">'+signed2(D.avg)+'</td><td>'+D.maxLossStreak+'</td><td>'+r.maxDD.toFixed(1)+'%</td></tr>');trainStart=addMonthsUTC(trainStart,3);testStart=addMonthsUTC(testStart,3)}
+if(!windows.length)throw Error(symbol+' 日期範圍不足；至少需要約 15 個月');let pnl=windows.reduce((a,x)=>a+x.pnl,0),worst=Math.max(...windows.map(x=>x.dd)),lp=windows.reduce((a,x)=>a+x.L,0),sp=windows.reduce((a,x)=>a+x.S,0),n=windows.reduce((a,x)=>a+x.n,0),pos=windows.filter(x=>x.pnl>0).length,AD=tradeDiag(allTr),AL=tradeDiag(allTr.filter(x=>x.dir==='LONG')),AS=tradeDiag(allTr.filter(x=>x.dir==='SHORT'));
+rows.push('<tr><td>'+symbol.replace('-USDT-SWAP','')+'</td><td>'+windows.length+'</td><td>'+pos+' / '+windows.length+'</td><td class="'+(pnl>=0?'green':'red')+'">'+signed2(pnl)+'</td><td>'+worst.toFixed(1)+'%</td><td>'+AD.wr.toFixed(1)+'%</td><td>'+AL.n+'</td><td>'+AL.wr.toFixed(1)+'%</td><td>'+AS.n+'</td><td>'+AS.wr.toFixed(1)+'%</td><td class="'+(lp>=0?'green':'red')+'">'+signed2(lp)+'</td><td class="'+(sp>=0?'green':'red')+'">'+signed2(sp)+'</td><td>'+n+'</td></tr>');$('wfRows').innerHTML=rows.join('');$('wfDetailRows').innerHTML=detailRows.join('');$('prog').style.width=((si+1)/5*100)+'%';await new Promise(q=>setTimeout(q,20))}
+$('status').textContent='5 交易對 Walk-Forward 詳細診斷完成｜已計算實際交易勝率、PF、平均損益與最大連虧。';
+}catch(e){$('status').textContent='Walk-Forward 詳細診斷失敗：'+e.message+'。'}finally{$('runWF').disabled=false;$('runOOS').disabled=false;$('runCross').disabled=false;$('run').disabled=false}};
+$('runOOS').onclick=async()=>{try{
+let start=new Date($('start').value+'T00:00:00').getTime(),end=new Date($('end').value+'T23:59:59').getTime();if(!start||!end||start>=end)throw Error('日期設定不正確');
+let capital=+$('capital').value,margin=+$('margin').value,leverage=+$('leverage').value,fee=+$('fee').value/100,slip=+$('slippage').value/100;if(!(capital>0&&margin>0&&leverage>0))throw Error('資金設定不正確');if(margin>capital)throw Error('每筆保證金不可高於起始資金');
+let selected=$('snrMode').value,mode=selected==='ALL'?'1D':selected,names={'15m':'15m','1H':'15m+1H','4H':'15m+1H+4H','1D':'15m+1H+4H+1D'},ratio=+$('oosSplit').value/100;
+let symbols=['ETH-USDT-SWAP','BTC-USDT-SWAP','SOL-USDT-SWAP','DOGE-USDT-SWAP','XRP-USDT-SWAP'],opt={capital,margin,leverage,fee,slip},rows=[];
+$('runOOS').disabled=true;$('runCross').disabled=true;$('run').disabled=true;$('prog').style.width='0';
+for(let i=0;i<symbols.length;i++){let symbol=symbols[i];$('status').textContent='OOS '+(i+1)+'/5：讀取 '+symbol+'…';let c=await fetchRange(start,end,symbol);if(c.length<600)throw Error(symbol+' K 線不足');let chk=completenessCheck(c,start,end);if(!chk.ok)throw Error(symbol+' 歷史資料不完整（'+chk.coverage.toFixed(2)+'%）');
+let split=Math.max(300,Math.min(c.length-300,Math.floor(c.length*ratio))),isC=c.slice(0,split),oosStart=c[split].t,oosC=c.slice(0);let ri=backtest(isC,mode,opt),ro=backtest(oosC,mode,opt,oosStart),zi=stats(ri,capital),zo=stats(ro,capital),L=sideStats(ro.tr,'LONG'),S=sideStats(ro.tr,'SHORT');
+rows.push('<tr><td>'+symbol.replace('-USDT-SWAP','')+'</td><td class="'+(zi.pnl>=0?'green':'red')+'">'+signed2(zi.pnl)+'</td><td>'+ri.maxDD.toFixed(1)+'%</td><td class="'+(zo.pnl>=0?'green':'red')+'">'+signed2(zo.pnl)+'</td><td>'+ro.maxDD.toFixed(1)+'%</td><td class="'+(L.pnl>=0?'green':'red')+'">'+signed2(L.pnl)+'</td><td class="'+(S.pnl>=0?'green':'red')+'">'+signed2(S.pnl)+'</td><td>'+zo.wr.toFixed(1)+'%</td></tr>');$('oosRows').innerHTML=rows.join('');$('prog').style.width=((i+1)/5*100)+'%';await new Promise(q=>setTimeout(q,20))}
+$('status').textContent='5 交易對樣本外驗證完成｜切分 '+Math.round(ratio*100)+'% / '+Math.round((1-ratio)*100)+'%｜模式：'+names[mode]+'。';
+}catch(e){$('status').textContent='樣本外驗證失敗：'+e.message+'。'}finally{$('runOOS').disabled=false;$('runCross').disabled=false;$('run').disabled=false}};
+$('runCross').onclick=async()=>{try{
+ let start=new Date($('start').value+'T00:00:00').getTime(),end=new Date($('end').value+'T23:59:59').getTime();
+ if(!start||!end||start>=end)throw Error('日期設定不正確');
+ let capital=+$('capital').value,margin=+$('margin').value,leverage=+$('leverage').value,fee=+$('fee').value/100,slip=+$('slippage').value/100;
+ if(!(capital>0&&margin>0&&leverage>0))throw Error('資金設定不正確');
+ if(margin>capital)throw Error('每筆保證金不可高於起始資金');
+ let selected=$('snrMode').value,mode=selected==='ALL'?'1D':selected;
+ let names={'15m':'15m','1H':'15m+1H','4H':'15m+1H+4H','1D':'15m+1H+4H+1D'};
+ let symbols=['ETH-USDT-SWAP','BTC-USDT-SWAP','SOL-USDT-SWAP','DOGE-USDT-SWAP','XRP-USDT-SWAP'];
+ let opt={capital,margin,leverage,fee,slip},rows=[];
+ $('runCross').disabled=true;$('run').disabled=true;$('prog').style.width='0';
+ for(let i=0;i<symbols.length;i++){
+   let symbol=symbols[i];
+   $('status').textContent='交叉驗證 '+(i+1)+'/5：下載/讀取 '+symbol+'…';
+   let c=await fetchRange(start,end,symbol);
+   if(c.length<300)throw Error(symbol+' K 線不足');
+   let chk=completenessCheck(c,start,end);
+   if(!chk.ok)throw Error(symbol+' 歷史資料不完整（'+chk.coverage.toFixed(2)+'%）');
+   $('status').textContent='交叉驗證 '+(i+1)+'/5：計算 '+symbol+'｜'+names[mode]+'…';
+   let r=backtest(c,mode,opt),z=stats(r,capital),L=sideStats(r.tr,'LONG'),S=sideStats(r.tr,'SHORT'),yp=yearlyPnls(r,start,end);
+   rows.push('<tr><td>'+symbol.replace('-USDT-SWAP','')+'</td><td>'+r.equity.toFixed(2)+'</td><td class="'+(z.pnl>=0?'green':'red')+'">'+signed2(z.pnl)+'</td><td>'+r.maxDD.toFixed(1)+'%</td><td class="'+(L.pnl>=0?'green':'red')+'">'+signed2(L.pnl)+'</td><td class="'+(S.pnl>=0?'green':'red')+'">'+signed2(S.pnl)+'</td><td class="'+((yp[0]||0)>=0?'green':'red')+'">'+signed2(yp[0]||0)+'</td><td class="'+((yp[1]||0)>=0?'green':'red')+'">'+signed2(yp[1]||0)+'</td></tr>');
+   $('crossRows').innerHTML=rows.join('');
+   $('prog').style.width=((i+1)/symbols.length*100)+'%';
+   await new Promise(q=>setTimeout(q,20));
+ }
+ $('status').textContent='5 交易對交叉驗證完成｜模式：'+names[mode]+'。';
+}catch(e){$('status').textContent='交叉驗證失敗：'+e.message+'。'}finally{$('runCross').disabled=false;$('run').disabled=false}};
+$('run').onclick=async()=>{try{let start=new Date($('start').value+'T00:00:00').getTime(),end=new Date($('end').value+'T23:59:59').getTime();if(!start||!end||start>=end)throw Error('日期設定不正確');let capital=+$('capital').value,margin=+$('margin').value,leverage=+$('leverage').value,fee=+$('fee').value/100,slip=+$('slippage').value/100,symbol=$('symbol').value;if(!(capital>0&&margin>0&&leverage>0))throw Error('資金設定不正確');if(margin>capital)throw Error('每筆保證金不可高於起始資金');$('run').disabled=true;$('prog').style.width='0';$('status').textContent='連線 OKX…';let c=await fetchRange(start,end,symbol);
+if(c.length<300)throw Error('取得的 K 線不足');
+let chk=completenessCheck(c,start,end);
+if(!chk.ok){
+ $('firstK').textContent=c.length?new Date(c[0].t).toLocaleString('zh-TW'):'—';
+ $('lastK').textContent=c.length?new Date(c.at(-1).t).toLocaleString('zh-TW'):'—';
+ $('kCount').textContent=c.length.toLocaleString();
+ $('gapCount').textContent=chk.gaps+' 段 / 約 '+chk.missing+' 根';
+ $('coverage').textContent=chk.coverage.toFixed(2)+'%';
+ $('diagNote').textContent='資料未通過完整性驗證：預期約 '+chk.expected.toLocaleString()+' 根，實得 '+c.length.toLocaleString()+' 根；起點缺約 '+chk.startMiss+' 根、終點缺約 '+chk.endMiss+' 根。已停止回測，避免把較短資料誤當成完整期間。';
+ throw Error('歷史資料不足或日期範圍未完整取得（完整率 '+chk.coverage.toFixed(2)+'%）');
+}
+let opt={capital,margin,leverage,fee,slip};$('status').textContent='已取得 '+c.length.toLocaleString()+' 根，正在進行 v1.3.10 Walk-Forward 詳細診斷回測…';await new Promise(q=>setTimeout(q,30));let selected=$('snrMode').value,modes=selected==='ALL'?['15m','1H','4H','1D']:[selected],names={'15m':'15m','1H':'15m+1H','4H':'15m+1H+4H','1D':'15m+1H+4H+1D'},results={};for(let k=0;k<modes.length;k++){let m=modes[k];$('status').textContent='計算 '+names[m]+'…';results[m]=backtest(c,m,opt);$('prog').style.width=(30+65*(k+1)/modes.length)+'%';await new Promise(q=>setTimeout(q,10))}let rows=modes.map(m=>{let r=results[m],z=stats(r,capital);return '<tr><td>'+names[m]+'</td><td>'+r.equity.toFixed(2)+'</td><td class="'+(z.pnl>=0?'green':'red')+'">'+(z.pnl>=0?'+':'')+z.pnl.toFixed(2)+'</td><td>'+r.tr.length+'</td><td>'+z.wr.toFixed(1)+'%</td><td>'+r.maxDD.toFixed(1)+'%</td></tr>'}).join('');$('compareRows').innerHTML=rows;let show=results[modes.at(-1)];fill(show,start,end,capital);fillDiagnostics(c,start,end,show);fillAnnualSplit(show,start,end,capital);let ctx=tfContext(c,c.length-1);$('s15').textContent=fmtS(ctx.s15);$('s1h').textContent=fmtS(ctx.s1h);$('s4h').textContent=fmtS(ctx.s4h);$('s1d').textContent=fmtS(ctx.s1d);$('prog').style.width='100%';$('status').textContent='完成：'+symbol+'｜'+new Date(c[0].t).toLocaleDateString('zh-TW')+' ～ '+new Date(c.at(-1).t).toLocaleDateString('zh-TW')+'｜完整率 '+completenessCheck(c,start,end).coverage.toFixed(2)+'%｜名目倉位 '+(margin*leverage).toFixed(2)+' USDT';}catch(e){$('status').textContent='回測失敗：'+e.message+'。'}finally{$('run').disabled=false}};
+</script></body></html>
